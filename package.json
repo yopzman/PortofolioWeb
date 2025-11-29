@@ -1,0 +1,29 @@
+{
+  "name": "portfolio-website",
+  "version": "1.0.0",
+  "description": "Minimalist single-page portfolio website",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve . -l 8000",
+    "dev:3001": "npx serve . -l 3001",
+    "dev:5000": "npx serve . -l 5000",
+    "build": "echo 'No build step required'",
+    "deploy:vercel": "vercel",
+    "deploy:netlify": "netlify deploy --prod"
+  },
+  "keywords": [
+    "portfolio",
+    "website",
+    "minimalist",
+    "single-page"
+  ],
+  "author": {
+    "name": "Yovie Kobba",
+    "url": "https://github.com/yopzman"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
+
