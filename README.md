@@ -226,6 +226,7 @@ Lihat dokumentasi lengkap di [docs/README.md](./docs/README.md) untuk detail leb
 - **[docs/ADMIN_GUIDE.md](./docs/ADMIN_GUIDE.md)** - Panduan admin & login system
 - **[docs/GIT_SYNC_GUIDE.md](./docs/GIT_SYNC_GUIDE.md)** - Panduan Git Sync (GitHub/GitLab)
 - **[docs/ICONS_GUIDE.md](./docs/ICONS_GUIDE.md)** - Panduan technology icons
+- **[docs/OBFUSCATION_GUIDE.md](./docs/OBFUSCATION_GUIDE.md)** - Panduan JavaScript Obfuscation
 
 ## 🎯 Sections
 
@@ -235,6 +236,19 @@ Website terdiri dari 4 section utama:
 2. **About** - Bio, services, dan technologies
 3. **Projects** - Portfolio projects dengan tech icons
 4. **Contact** - Email dan social media links
+
+## 🔒 Code Protection
+
+Website ini dilengkapi dengan **JavaScript Obfuscation** untuk melindungi source code dari inspect element.
+
+**Quick Start:**
+```bash
+npm install          # Install dependencies
+npm run build        # Obfuscate JavaScript
+npm run preview      # Preview production build
+```
+
+**Lihat [docs/OBFUSCATION_GUIDE.md](./docs/OBFUSCATION_GUIDE.md) untuk panduan lengkap!**
 
 ## 📦 Deployment
 
@@ -247,6 +261,8 @@ Semua file konfigurasi sudah disediakan untuk:
 - ✅ Cloudflare Pages
 - ✅ Firebase Hosting
 - ✅ Surge.sh
+
+**⚠️ Important:** Deploy folder `dist/` (hasil build) bukan folder root!
 
 ## 🛠️ Browser Support
 

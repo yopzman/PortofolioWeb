@@ -7,9 +7,11 @@
     "dev": "npx serve . -l 8000",
     "dev:3001": "npx serve . -l 3001",
     "dev:5000": "npx serve . -l 5000",
-    "build": "echo 'No build step required'",
-    "deploy:vercel": "vercel",
-    "deploy:netlify": "netlify deploy --prod"
+    "build": "node scripts/obfuscate.js",
+    "build:dev": "node scripts/obfuscate.js",
+    "preview": "npm run build && npx serve dist -l 8000",
+    "deploy:vercel": "npm run build && vercel --prod dist",
+    "deploy:netlify": "npm run build && netlify deploy --prod --dir=dist"
   },
   "keywords": [
     "portfolio",
@@ -23,7 +25,8 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "serve": "^14.2.1"
+    "serve": "^14.2.1",
+    "javascript-obfuscator": "^4.1.0"
   }
 }
 

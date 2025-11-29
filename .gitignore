@@ -3,9 +3,10 @@ node_modules/
 package-lock.json
 yarn.lock
 
-# Build outputs
+# Build outputs / Obfuscated files
 dist/
 build/
+*.obfuscated.js
 .vercel/
 .netlify/
 
