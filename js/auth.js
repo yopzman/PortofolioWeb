@@ -1,9 +1,12 @@
-// ============================================
-// AUTHENTICATION SYSTEM
-// ============================================
-// Simple authentication using localStorage
-// ============================================
-
+/**
+ * ============================================
+ * AUTHENTICATION SYSTEM
+ * ============================================
+ * Simple authentication using localStorage
+ * ============================================
+ * 
+ * @namespace Auth
+ */
 const Auth = {
     // Credentials from environment variables
     // Loaded from js/env.js (git-ignored for security)
@@ -19,46 +22,70 @@ const Auth = {
 
     /**
      * Check if user is authenticated
+     * @returns {boolean} True if user is authenticated and session is valid
      */
     isAuthenticated() {
-        const storageKey = typeof Constants !== 'undefined' 
-            ? Constants.STORAGE_KEYS.ADMIN_AUTH 
-            : 'portfolio_admin_auth';
-        const authData = localStorage.getItem(storageKey);
-        if (!authData) return false;
-        
         try {
+            const storageKey = typeof Constants !== 'undefined' 
+                ? Constants.STORAGE_KEYS.ADMIN_AUTH 
+                : 'portfolio_admin_auth';
+            const authData = localStorage.getItem(storageKey);
+            
+            if (!authData) {
+                return false;
+            }
+            
             const data = JSON.parse(authData);
+            
+            // Validate data structure
+            if (typeof data !== 'object' || data === null) {
+                return false;
+            }
+            
             // Check if session is still valid
             const now = Date.now();
-            if (now - data.timestamp > this.SESSION_DURATION) {
+            if (typeof data.timestamp !== 'number' || now - data.timestamp > this.SESSION_DURATION) {
                 this.logout();
                 return false;
             }
+            
             return data.authenticated === true;
-        } catch (e) {
+        } catch (error) {
+            console.error('Error checking authentication:', error);
             return false;
         }
     },
 
     /**
      * Login user
+     * @param {string} username - Username
+     * @param {string} password - Password
+     * @returns {boolean} True if login was successful
      */
     login(username, password) {
-        // Simple credential check (in production, use proper authentication)
-        if (username === this.credentials.username && password === this.credentials.password) {
-            const authData = {
-                authenticated: true,
-                username: username,
-                timestamp: Date.now()
-            };
-            const storageKey = typeof Constants !== 'undefined' 
-                ? Constants.STORAGE_KEYS.ADMIN_AUTH 
-                : 'portfolio_admin_auth';
-            localStorage.setItem(storageKey, JSON.stringify(authData));
-            return true;
+        if (typeof username !== 'string' || typeof password !== 'string') {
+            return false;
         }
-        return false;
+        
+        try {
+            // Simple credential check (in production, use proper authentication)
+            if (username === this.credentials.username && password === this.credentials.password) {
+                const authData = {
+                    authenticated: true,
+                    username: username,
+                    timestamp: Date.now()
+                };
+                const storageKey = typeof Constants !== 'undefined' 
+                    ? Constants.STORAGE_KEYS.ADMIN_AUTH 
+                    : 'portfolio_admin_auth';
+                localStorage.setItem(storageKey, JSON.stringify(authData));
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error during login:', error);
+            return false;
+        }
     },
 
     /**

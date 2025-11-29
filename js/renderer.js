@@ -1,41 +1,79 @@
-// ============================================
-// CONTENT RENDERER
-// ============================================
-// Handles rendering of all dynamic content
-// ============================================
-
+/**
+ * ============================================
+ * CONTENT RENDERER
+ * ============================================
+ * Handles rendering of all dynamic content sections
+ * ============================================
+ * 
+ * @namespace Renderer
+ */
 const Renderer = {
     /**
      * Render all content sections
+     * @returns {boolean} True if rendering was successful
      */
     renderAll() {
-        this.updateMetaTags();
-        this.updateHero();
-        this.updateAbout();
-        this.updateProjects();
-        this.updateContact();
-        
-        // Listen for projects updates from dashboard
-        window.addEventListener('projectsUpdated', (e) => {
+        try {
+            this.updateMetaTags();
+            this.updateHero();
+            this.updateAbout();
             this.updateProjects();
-        });
+            this.updateContact();
+            
+            // Listen for projects updates from dashboard
+            window.addEventListener('projectsUpdated', () => {
+                this.updateProjects();
+            });
+            
+            return true;
+        } catch (error) {
+            console.error('Error rendering content:', error);
+            return false;
+        }
     },
 
     /**
      * Update meta tags for SEO
+     * @returns {boolean} True if meta tags were updated
      */
     updateMetaTags() {
-        if (typeof CONFIG === 'undefined' || !CONFIG.meta) return;
+        if (typeof CONFIG === 'undefined' || !CONFIG.meta) {
+            console.warn('Renderer.updateMetaTags: CONFIG.meta not found');
+            return false;
+        }
         
-        document.title = CONFIG.meta.title;
-        setMetaTag('description', CONFIG.meta.description);
-        setMetaTag('keywords', CONFIG.meta.keywords);
-        setMetaTag('author', CONFIG.meta.author);
-        setMetaTag('og:title', CONFIG.meta.title, 'property');
-        setMetaTag('og:description', CONFIG.meta.description, 'property');
-        
-        if (CONFIG.meta.ogImage) {
-            setMetaTag('og:image', CONFIG.meta.ogImage, 'property');
+        try {
+            const { meta } = CONFIG;
+            
+            if (meta.title) {
+                document.title = meta.title;
+            }
+            
+            if (meta.description) {
+                setMetaTag('description', meta.description);
+                setMetaTag('og:description', meta.description, 'property');
+            }
+            
+            if (meta.keywords) {
+                setMetaTag('keywords', meta.keywords);
+            }
+            
+            if (meta.author) {
+                setMetaTag('author', meta.author);
+            }
+            
+            if (meta.title) {
+                setMetaTag('og:title', meta.title, 'property');
+            }
+            
+            if (meta.ogImage) {
+                setMetaTag('og:image', meta.ogImage, 'property');
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Error updating meta tags:', error);
+            return false;
         }
     },
 
@@ -95,57 +133,123 @@ const Renderer = {
     /**
      * Update projects section
      * Loads from local database (localStorage) first, then falls back to CONFIG
+     * @returns {boolean} True if projects were rendered
      */
     updateProjects() {
         const projectsGrid = document.querySelector('.projects-grid');
-        if (!projectsGrid) return;
-        
-        // Try to load from local database first
-        let projects = [];
-        const savedProjects = localStorage.getItem('portfolio_projects_db');
-        if (savedProjects) {
-            try {
-                projects = JSON.parse(savedProjects);
-            } catch (e) {
-                console.error('Error loading projects from localStorage:', e);
-            }
+        if (!projectsGrid) {
+            console.warn('Renderer.updateProjects: .projects-grid not found');
+            return false;
         }
         
-        // Fallback to CONFIG if no local database
-        if (projects.length === 0 && typeof CONFIG !== 'undefined' && CONFIG.projects) {
-            projects = CONFIG.projects;
-        }
-        
-        if (projects.length === 0) return;
-        
-        projectsGrid.innerHTML = projects.map(project => `
-            <div class="project-item" data-project="${project.number}">
-                <div class="project-image">
-                    ${project.image 
-                        ? `<img src="${project.image}" alt="${project.title}" loading="lazy" />`
-                        : '<div class="project-placeholder"></div>'
+        try {
+            // Try to load from local database first
+            let projects = [];
+            const storageKey = typeof Constants !== 'undefined' 
+                ? Constants.STORAGE_KEYS.PROJECTS_DB 
+                : 'portfolio_projects_db';
+            const savedProjects = localStorage.getItem(storageKey);
+            
+            if (savedProjects) {
+                try {
+                    projects = JSON.parse(savedProjects);
+                    if (!Array.isArray(projects)) {
+                        throw new Error('Projects data is not an array');
                     }
+                } catch (e) {
+                    console.error('Error loading projects from localStorage:', e);
+                    projects = [];
+                }
+            }
+            
+            // Fallback to CONFIG if no local database
+            if (projects.length === 0 && typeof CONFIG !== 'undefined' && CONFIG.projects) {
+                projects = Array.isArray(CONFIG.projects) ? CONFIG.projects : [];
+            }
+            
+            if (projects.length === 0) {
+                projectsGrid.innerHTML = '<p class="no-projects">No projects available</p>';
+                return false;
+            }
+            
+            projectsGrid.innerHTML = projects.map(project => this.renderProjectItem(project)).join('');
+            return true;
+        } catch (error) {
+            console.error('Error updating projects:', error);
+            projectsGrid.innerHTML = '<p class="error">Error loading projects</p>';
+            return false;
+        }
+    },
+
+    /**
+     * Render a single project item
+     * @param {Object} project - Project object
+     * @returns {string} HTML string for project item
+     */
+    renderProjectItem(project) {
+        if (!project || typeof project !== 'object') {
+            return '';
+        }
+        
+        const {
+            number = '',
+            title = 'Untitled Project',
+            description = '',
+            tags = [],
+            link = '#',
+            image = null
+        } = project;
+        
+        const imageHtml = image 
+            ? `<img src="${this.escapeHtml(image)}" alt="${this.escapeHtml(title)}" loading="lazy" />`
+            : '<div class="project-placeholder"></div>';
+        
+        const tagsHtml = Array.isArray(tags) ? tags.map(tag => {
+            const iconUrl = typeof getTechIcon !== 'undefined' ? getTechIcon(tag) : null;
+            if (iconUrl) {
+                return `<span class="tag tag-with-icon">
+                    <img src="${this.escapeHtml(iconUrl)}" alt="${this.escapeHtml(tag)}" class="tech-icon" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="tech-icon-fallback" style="display:none;">${this.escapeHtml(tag)}</span>
+                </span>`;
+            }
+            return `<span class="tag">${this.escapeHtml(tag)}</span>`;
+        }).join('') : '';
+        
+        const linkAttrs = link === '#' 
+            ? 'onclick="return false;"'
+            : `target="_blank" rel="noopener noreferrer"`;
+        
+        return `
+            <div class="project-item" data-project="${this.escapeHtml(number)}">
+                <div class="project-image">
+                    ${imageHtml}
                 </div>
                 <div class="project-info">
-                    <div class="project-number">${project.number}</div>
-                    <h3 class="project-title">${project.title}</h3>
-                    <p class="project-description">${project.description}</p>
+                    <div class="project-number">${this.escapeHtml(number)}</div>
+                    <h3 class="project-title">${this.escapeHtml(title)}</h3>
+                    <p class="project-description">${this.escapeHtml(description)}</p>
                     <div class="project-tags">
-                        ${project.tags.map(tag => {
-                            const iconUrl = typeof getTechIcon !== 'undefined' ? getTechIcon(tag) : null;
-                            if (iconUrl) {
-                                return `<span class="tag tag-with-icon">
-                                    <img src="${iconUrl}" alt="${tag}" class="tech-icon" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                                    <span class="tech-icon-fallback" style="display:none;">${tag}</span>
-                                </span>`;
-                            }
-                            return `<span class="tag">${tag}</span>`;
-                        }).join('')}
+                        ${tagsHtml}
                     </div>
-                    <a href="${project.link}" class="project-link" ${project.link === '#' ? 'onclick="return false;"' : ''} target="${project.link !== '#' ? '_blank' : '_self'}" rel="noopener">view project →</a>
+                    <a href="${this.escapeHtml(link)}" class="project-link" ${linkAttrs}>view project →</a>
                 </div>
             </div>
-        `).join('');
+        `;
+    },
+
+    /**
+     * Escape HTML to prevent XSS attacks
+     * @param {string} text - Text to escape
+     * @returns {string} Escaped HTML string
+     */
+    escapeHtml(text) {
+        if (typeof text !== 'string') {
+            return String(text || '');
+        }
+        
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     },
 
     /**

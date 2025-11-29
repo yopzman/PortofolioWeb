@@ -1,9 +1,13 @@
-// ============================================
-// TECHNOLOGY ICONS MAPPING
-// ============================================
-// Maps technology names to their icon URLs
-// Uses Simple Icons (https://simpleicons.org/)
-// ============================================
+/**
+ * ============================================
+ * TECHNOLOGY ICONS MAPPING
+ * ============================================
+ * Maps technology names to their icon URLs
+ * Uses Simple Icons (https://simpleicons.org/)
+ * ============================================
+ * 
+ * @namespace TECH_ICONS
+ */
 
 const TECH_ICONS = {
     // JavaScript & TypeScript
@@ -93,63 +97,103 @@ const TECH_ICONS = {
     'cypress': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/cypress.svg',
 };
 
+// Icon cache for performance
+const iconCache = new Map();
+
 /**
  * Get icon URL for a technology
  * @param {string} techName - Technology name
  * @returns {string|null} Icon URL or null if not found
  */
 function getTechIcon(techName) {
-    if (!techName) return null;
-    
-    const normalized = techName.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-    
-    // Try exact match first
-    if (TECH_ICONS[techName.toLowerCase()]) {
-        return TECH_ICONS[techName.toLowerCase()];
+    if (!techName || typeof techName !== 'string') {
+        return null;
     }
     
-    // Try normalized match
-    if (TECH_ICONS[normalized]) {
-        return TECH_ICONS[normalized];
+    // Check cache first
+    const cacheKey = techName.toLowerCase().trim();
+    if (iconCache.has(cacheKey)) {
+        return iconCache.get(cacheKey);
     }
     
-    // Try partial match
-    for (const [key, value] of Object.entries(TECH_ICONS)) {
-        if (key.includes(normalized) || normalized.includes(key)) {
-            return value;
+    const normalized = cacheKey.replace(/[^a-z0-9]/g, '');
+    let iconUrl = null;
+    
+    try {
+        // Try exact match first
+        if (TECH_ICONS[cacheKey]) {
+            iconUrl = TECH_ICONS[cacheKey];
         }
+        // Try normalized match
+        else if (TECH_ICONS[normalized]) {
+            iconUrl = TECH_ICONS[normalized];
+        }
+        // Try partial match
+        else {
+            for (const [key, value] of Object.entries(TECH_ICONS)) {
+                if (key.includes(normalized) || normalized.includes(key)) {
+                    iconUrl = value;
+                    break;
+                }
+            }
+        }
+        
+        // Cache result (even if null)
+        iconCache.set(cacheKey, iconUrl);
+        return iconUrl;
+    } catch (error) {
+        console.error('Error getting tech icon:', error);
+        return null;
     }
-    
-    return null;
 }
 
 /**
  * Create icon element for a technology
  * @param {string} techName - Technology name
- * @returns {HTMLElement} Icon element or fallback text
+ * @param {string} [className='tech-icon'] - CSS class name for icon
+ * @returns {HTMLElement} Icon element or fallback text span
  */
-function createTechIcon(techName) {
-    const iconUrl = getTechIcon(techName);
-    
-    if (iconUrl) {
-        const icon = document.createElement('img');
-        icon.src = iconUrl;
-        icon.alt = techName;
-        icon.className = 'tech-icon';
-        icon.loading = 'lazy';
-        icon.onerror = function() {
-            this.style.display = 'none';
-            const fallback = document.createElement('span');
-            fallback.textContent = techName;
-            fallback.className = 'tech-icon-fallback';
-            this.parentNode.appendChild(fallback);
-        };
-        return icon;
+function createTechIcon(techName, className = 'tech-icon') {
+    if (!techName || typeof techName !== 'string') {
+        const fallback = document.createElement('span');
+        fallback.textContent = techName || '';
+        fallback.className = 'tech-icon-fallback';
+        return fallback;
     }
     
-    const fallback = document.createElement('span');
-    fallback.textContent = techName;
-    fallback.className = 'tech-icon-fallback';
-    return fallback;
+    try {
+        const iconUrl = getTechIcon(techName);
+        
+        if (iconUrl) {
+            const icon = document.createElement('img');
+            icon.src = iconUrl;
+            icon.alt = techName;
+            icon.className = className;
+            icon.loading = 'lazy';
+            icon.decoding = 'async';
+            icon.onerror = function() {
+                this.style.display = 'none';
+                const fallback = document.createElement('span');
+                fallback.textContent = techName;
+                fallback.className = 'tech-icon-fallback';
+                if (this.parentNode) {
+                    this.parentNode.appendChild(fallback);
+                }
+            };
+            return icon;
+        }
+        
+        // Fallback to text
+        const fallback = document.createElement('span');
+        fallback.textContent = techName;
+        fallback.className = 'tech-icon-fallback';
+        return fallback;
+    } catch (error) {
+        console.error('Error creating tech icon:', error);
+        const fallback = document.createElement('span');
+        fallback.textContent = techName;
+        fallback.className = 'tech-icon-fallback';
+        return fallback;
+    }
 }
 

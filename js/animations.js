@@ -1,21 +1,32 @@
-// ============================================
-// ANIMATIONS HANDLER
-// ============================================
-// Handles all animation-related functionality
-// ============================================
-
+/**
+ * ============================================
+ * ANIMATIONS HANDLER
+ * ============================================
+ * Handles all animation-related functionality
+ * ============================================
+ * 
+ * @namespace Animations
+ */
 const Animations = {
+    /** @type {IntersectionObserver|null} */
     observer: null,
 
     /**
      * Initialize all animations
+     * @returns {boolean} True if initialization was successful
      */
     init() {
-        this.setupScrollAnimations();
-        this.setupProjectHover();
-        this.setupParallax();
-        this.setupCursor();
-        this.setupPageLoad();
+        try {
+            this.setupScrollAnimations();
+            this.setupProjectHover();
+            this.setupParallax();
+            this.setupCursor();
+            this.setupPageLoad();
+            return true;
+        } catch (error) {
+            console.error('Error initializing animations:', error);
+            return false;
+        }
     },
 
     /**
@@ -41,13 +52,34 @@ const Animations = {
 
     /**
      * Observe project items for scroll animations
+     * @returns {number} Number of items being observed
      */
     observeProjects() {
-        document.querySelectorAll('.project-item').forEach(item => {
-            if (this.observer) {
-                this.observer.observe(item);
+        try {
+            const items = document.querySelectorAll('.project-item');
+            if (!this.observer || items.length === 0) {
+                return 0;
             }
-        });
+            
+            items.forEach(item => {
+                this.observer.observe(item);
+            });
+            
+            return items.length;
+        } catch (error) {
+            console.error('Error observing projects:', error);
+            return 0;
+        }
+    },
+    
+    /**
+     * Cleanup observer
+     */
+    destroy() {
+        if (this.observer) {
+            this.observer.disconnect();
+            this.observer = null;
+        }
     },
 
     /**
