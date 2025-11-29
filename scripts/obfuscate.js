@@ -35,6 +35,75 @@ const obfuscationOptions = {
     unicodeEscapeSequence: false
 };
 
+// Load environment variables from .env file
+function loadEnvFile() {
+    const envPath = path.join(__dirname, '..', '.env');
+    const env = {};
+    
+    if (fs.existsSync(envPath)) {
+        const envContent = fs.readFileSync(envPath, 'utf8');
+        envContent.split('\n').forEach(line => {
+            const trimmed = line.trim();
+            if (trimmed && !trimmed.startsWith('#')) {
+                const [key, ...valueParts] = trimmed.split('=');
+                if (key && valueParts.length > 0) {
+                    env[key.trim()] = valueParts.join('=').trim().replace(/^["']|["']$/g, '');
+                }
+            }
+        });
+    }
+    
+    return env;
+}
+
+// Generate env.js from .env file or use existing env.js
+function generateEnvFile(distJsDir) {
+    const env = loadEnvFile();
+    const envJsPath = path.join(__dirname, '..', 'js', 'env.js');
+    const distEnvJsPath = path.join(distJsDir, 'env.js');
+    
+    let envCode = `// ============================================
+// ENVIRONMENT VARIABLES (Generated from .env)
+// ============================================
+// ⚠️ This file contains sensitive credentials
+// ============================================
+
+const Env = {
+    ADMIN_USERNAME: '${env.ADMIN_USERNAME || 'admin'}',
+    ADMIN_PASSWORD: '${env.ADMIN_PASSWORD || 'admin123'}',
+    GITHUB_TOKEN: '${env.GITHUB_TOKEN || ''}',
+    GITLAB_TOKEN: '${env.GITLAB_TOKEN || ''}'
+};`;
+
+    // If env.js exists, use it (for development)
+    if (fs.existsSync(envJsPath)) {
+        const existingEnv = fs.readFileSync(envJsPath, 'utf8');
+        // Extract values from existing env.js if .env doesn't have them
+        if (!env.ADMIN_USERNAME || !env.ADMIN_PASSWORD) {
+            const usernameMatch = existingEnv.match(/ADMIN_USERNAME:\s*['"]([^'"]+)['"]/);
+            const passwordMatch = existingEnv.match(/ADMIN_PASSWORD:\s*['"]([^'"]+)['"]/);
+            if (usernameMatch) env.ADMIN_USERNAME = usernameMatch[1];
+            if (passwordMatch) env.ADMIN_PASSWORD = passwordMatch[1];
+            
+            envCode = `// ============================================
+// ENVIRONMENT VARIABLES (Generated from .env)
+// ============================================
+// ⚠️ This file contains sensitive credentials
+// ============================================
+
+const Env = {
+    ADMIN_USERNAME: '${env.ADMIN_USERNAME || 'admin'}',
+    ADMIN_PASSWORD: '${env.ADMIN_PASSWORD || 'admin123'}',
+    GITHUB_TOKEN: '${env.GITHUB_TOKEN || ''}',
+    GITLAB_TOKEN: '${env.GITLAB_TOKEN || ''}'
+};`;
+        }
+    }
+    
+    fs.writeFileSync(distEnvJsPath, envCode, 'utf8');
+    console.log('✅ js/env.js (generated from .env)');
+}
+
 // Daftar file JavaScript yang akan di-obfuscate
 const jsFiles = [
     'js/config.js',
@@ -64,6 +133,23 @@ if (!fs.existsSync(distJsDir)) {
 }
 
 console.log('🔒 Starting JavaScript obfuscation...\n');
+
+// Generate env.js from .env file
+generateEnvFile(distJsDir);
+
+// Obfuscate env.js (but keep it readable for debugging, or fully obfuscate)
+const envJsPath = path.join(distJsDir, 'env.js');
+if (fs.existsSync(envJsPath)) {
+    const envCode = fs.readFileSync(envJsPath, 'utf8');
+    // Obfuscate env.js with high security
+    const obfuscationResult = JavaScriptObfuscator.obfuscate(envCode, {
+        ...obfuscationOptions,
+        stringArrayEncoding: ['base64'],
+        selfDefending: true
+    });
+    fs.writeFileSync(envJsPath, obfuscationResult.getObfuscatedCode(), 'utf8');
+    console.log('✅ js/env.js (obfuscated)');
+}
 
 // Obfuscate setiap file
 jsFiles.forEach(file => {
@@ -117,6 +203,14 @@ filesToCopy.forEach(({ src, dest }) => {
     
     // Update path JavaScript di HTML untuk menggunakan dist/js
     if (src.endsWith('.html')) {
+        // Add env.js first
+        if (content.includes('js/config.js')) {
+            content = content.replace(
+                /<script src="js\/config\.js"><\/script>/,
+                '<script src="js/env.js"></script>\n    <script src="js/config.js"></script>'
+            );
+        }
+        // Update other JS paths
         jsFiles.forEach(jsFile => {
             const jsFileName = path.basename(jsFile);
             const originalPath = jsFile.replace(/\\/g, '/');

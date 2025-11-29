@@ -21,6 +21,13 @@ const GitSync = {
      * Load saved credentials
      */
     loadCredentials() {
+        // Load from environment variables first (from .env)
+        if (typeof Env !== 'undefined') {
+            this.githubToken = Env.GITHUB_TOKEN || null;
+            this.gitlabToken = Env.GITLAB_TOKEN || null;
+        }
+        
+        // Then load from localStorage (user can override via dashboard)
         const storageKey = typeof Constants !== 'undefined' 
             ? Constants.STORAGE_KEYS.GIT_CREDENTIALS 
             : 'portfolio_git_credentials';
@@ -28,8 +35,9 @@ const GitSync = {
         if (saved) {
             try {
                 const creds = JSON.parse(saved);
-                this.githubToken = creds.githubToken || null;
-                this.gitlabToken = creds.gitlabToken || null;
+                // Only override if not set from env or if user explicitly set
+                if (!this.githubToken) this.githubToken = creds.githubToken || null;
+                if (!this.gitlabToken) this.gitlabToken = creds.gitlabToken || null;
                 this.githubUsername = creds.githubUsername || null;
                 this.gitlabUsername = creds.gitlabUsername || null;
             } catch (e) {

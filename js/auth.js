@@ -5,10 +5,11 @@
 // ============================================
 
 const Auth = {
-    // Default credentials (change these!)
+    // Credentials from environment variables
+    // Loaded from js/env.js (git-ignored for security)
     credentials: {
-        username: 'admin',
-        password: 'admin123'
+        username: typeof Env !== 'undefined' ? Env.ADMIN_USERNAME : 'admin',
+        password: typeof Env !== 'undefined' ? Env.ADMIN_PASSWORD : 'admin123'
     },
     
     // Session duration (24 hours)

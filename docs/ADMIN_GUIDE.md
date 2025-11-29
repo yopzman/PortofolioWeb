@@ -11,7 +11,7 @@ Sistem admin portfolio menggunakan **authentication** dan **local database** (lo
 - **Username**: `admin`
 - **Password**: `admin123`
 
-⚠️ **PENTING**: Ganti credentials default di `js/auth.js` untuk keamanan!
+⚠️ **PENTING**: Ganti credentials default menggunakan environment variables (`.env`) untuk keamanan!
 
 ### Cara Login
 
@@ -22,23 +22,40 @@ Sistem admin portfolio menggunakan **authentication** dan **local database** (lo
 
 ### Mengubah Credentials
 
-Edit file `js/auth.js`:
+**Recommended: Menggunakan .env file**
 
-```javascript
-const Auth = {
-    credentials: {
-        username: 'your_username',  // ← Ganti ini
-        password: 'your_password'    // ← Ganti ini
-    },
-    // ...
-}
-```
+1. Copy `.env.example` ke `.env`:
+   ```bash
+   cp .env.example .env
+   ```
 
-Atau gunakan method `updateCredentials()`:
+2. Edit `.env` file:
+   ```env
+   ADMIN_USERNAME=your_username
+   ADMIN_PASSWORD=your_strong_password
+   ```
 
-```javascript
-Auth.updateCredentials('new_username', 'new_password');
-```
+3. Build production:
+   ```bash
+   npm run build
+   ```
+
+**Alternative: Menggunakan js/env.js (Development)**
+
+1. Copy `js/env.example.js` ke `js/env.js`:
+   ```bash
+   cp js/env.example.js js/env.js
+   ```
+
+2. Edit `js/env.js`:
+   ```javascript
+   const Env = {
+       ADMIN_USERNAME: 'your_username',
+       ADMIN_PASSWORD: 'your_strong_password'
+   };
+   ```
+
+**Lihat [ENV_GUIDE.md](./ENV_GUIDE.md) untuk panduan lengkap!**
 
 ## 🗄️ Local Database
 
@@ -170,18 +187,17 @@ Dashboard menyediakan tombol "Download Updated config.js" untuk:
 
 ### Best Practices:
 
-1. **Ganti Default Credentials**
-   ```javascript
-   // js/auth.js
-   credentials: {
-       username: 'strong_username',
-       password: 'strong_password_123!'
-   }
+1. **Ganti Default Credentials menggunakan .env**
+   ```env
+   # .env file
+   ADMIN_USERNAME=strong_username
+   ADMIN_PASSWORD=strong_password_123!
    ```
 
 2. **Jangan Commit Credentials**
-   - Tambahkan `js/auth.js` ke `.gitignore` jika berisi credentials sensitif
-   - Atau gunakan environment variables
+   - `.env` dan `js/env.js` sudah di `.gitignore`
+   - Selalu gunakan `.env.example` dan `js/env.example.js` sebagai template
+   - **Lihat [ENV_GUIDE.md](./ENV_GUIDE.md) untuk detail lengkap**
 
 3. **Backup Data Regularly**
    - Export projects dari localStorage secara berkala

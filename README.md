@@ -227,6 +227,7 @@ Lihat dokumentasi lengkap di [docs/README.md](./docs/README.md) untuk detail leb
 - **[docs/GIT_SYNC_GUIDE.md](./docs/GIT_SYNC_GUIDE.md)** - Panduan Git Sync (GitHub/GitLab)
 - **[docs/ICONS_GUIDE.md](./docs/ICONS_GUIDE.md)** - Panduan technology icons
 - **[docs/OBFUSCATION_GUIDE.md](./docs/OBFUSCATION_GUIDE.md)** - Panduan JavaScript Obfuscation
+- **[docs/ENV_GUIDE.md](./docs/ENV_GUIDE.md)** - Panduan Environment Variables (Credentials)
 
 ## 🎯 Sections
 
@@ -282,8 +283,8 @@ Semua file konfigurasi sudah disediakan untuk:
 6. **Test di local** sebelum deploy
 
 ### Admin & Security
-7. **Login sebagai admin** di `login.html` untuk akses dashboard
-8. **Ganti default credentials** di `js/auth.js` untuk keamanan
+7. **Setup credentials** di `.env` file (lihat [docs/ENV_GUIDE.md](./docs/ENV_GUIDE.md))
+8. **Login sebagai admin** di `login.html` untuk akses dashboard
 9. **Keyboard shortcut** `Ctrl + Shift + D` untuk buka dashboard
 10. **Backup data** secara berkala menggunakan tombol download config
 
