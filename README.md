@@ -2,8 +2,6 @@
 
 ## 🛠️ Tech Stack yang Digunakan
 
-Website ini dibangun menggunakan teknologi modern berikut:
-
 ### Frontend Technologies
 
 - **HTML5** - Semantic markup untuk struktur konten yang accessible dan SEO-friendly
